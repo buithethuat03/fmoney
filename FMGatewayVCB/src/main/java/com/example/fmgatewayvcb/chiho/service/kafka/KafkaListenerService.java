@@ -78,18 +78,21 @@ public class KafkaListenerService {
             HttpEntity<String> requestEntity = new HttpEntity<>(requestPayload.toString(), headers);
             ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.POST, requestEntity, String.class);
 
+            ObjectNode responseBody = objectMapper.readValue(responseEntity.getBody(), ObjectNode.class);
+
             // Create the response payload
             ObjectNode responsePayload = objectMapper.createObjectNode();
             responsePayload.put("signature", messageSignature); // Use the signature from the original message
-            responsePayload.put("status", responseEntity.getStatusCode().toString()); // Status from response
+            responsePayload.put("status", responseBody.get("status").asText());; // Status from response
 
             //TODO
-            System.out.println(requestPayload.toString());
+            System.out.println("request payload: " + requestPayload.toString());
+            System.out.println("response payload: " + responsePayload.toString());
             // Send the response to Kafka topic
             kafkaTemplate.send("chi_ho_response", responsePayload.toString());
 
         } catch (IOException e) {
-            e.printStackTrace(); // Log exception
+            e.fillInStackTrace(); // Log exception
         }
     }
 }
